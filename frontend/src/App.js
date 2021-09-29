@@ -1,11 +1,14 @@
 import logo from './logo.svg';
 import 'bulma/css/bulma.min.css';
 import './App.css';
+
 import {Heading, Icon} from 'react-bulma-components';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisV, faSlidersH } from '@fortawesome/free-solid-svg-icons';
 import { useState, useEffect } from 'react';
 import React from 'react';
+
+import {getAllDays} from "./api/Storage.js";
 
 
 function Header(props) {
@@ -78,12 +81,102 @@ class WeekRow extends React.Component {
 }
 
 class Calendar extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {days: []};
+  }
+
+  stringifyDayOfWeek = (dayOfWeek) => {  
+    return isNaN(dayOfWeek) ? null : 
+      ['Su', 'M', 'T', 'W', 'Th', 'F', 'S'][dayOfWeek];
+  }
+
+  getDateString = (date) => {
+    var dateString = "";
+    if (date.getDate() == 1) {
+      dateString = date.getMonth()+1 + "/" + date.getDate();
+    } else {
+      dateString = date.getDate();
+    }
+
+    return dateString;
+  }
+
+  getRelevantDatesFromLastWeek = () => {
+    var currentDate = new Date();
+    var dates = [];
+
+    if (currentDate.getDay() > 4) {
+      for (var i = 0; i < 7; i++) {
+        dates.push({displayState: "exclude"});
+      }
+    } else {
+
+      var firstDayFromPreviousWeek = new Date(currentDate.getTime() - (5*24 * 60 * 60 * 1000));
+
+      for (var i = 0; i < firstDayFromPreviousWeek.getDay(); i++) {
+        dates.push({displayState: "exclude"});
+      }
+
+      for (var i = 0; i <= 6 - firstDayFromPreviousWeek.getDay(); i++) {
+        var dayFromPreviousWeek = new Date(currentDate.getTime() - ((5-i)*24 * 60 * 60 * 1000));
+        var dateString = this.getDateString(dayFromPreviousWeek);
+
+        dates.push({date: dateString, day: this.stringifyDayOfWeek(dayFromPreviousWeek.getDay()), displayState: "past"});
+        dayFromPreviousWeek.setDate(dayFromPreviousWeek.getDate() + 1);
+      }
+
+      return dates;
+    }
+  }
+
+  getDatesFromCurrentWeek = () => {
+    var currentDate = new Date();
+    var previousDayFromCurrentWeek = new Date();
+
+    var dates = [];
+
+    for (var i = 0; i < currentDate.getDay(); i++) {
+      previousDayFromCurrentWeek = new Date(currentDate.getTime() - ((currentDate.getDay()-i)*24 * 60 * 60 * 1000));
+      var dateString = this.getDateString(previousDayFromCurrentWeek);
+
+      dates.push({date: dateString, day: this.stringifyDayOfWeek(previousDayFromCurrentWeek.getDay()), displayState: "past"});
+    }
+
+    dates.push({date: this.getDateString(currentDate), day: this.stringifyDayOfWeek(currentDate.getDay()), displayState: "today"});
+
+    for (var i = 0; i < 6 - currentDate.getDay(); i++) {
+      var futureDayFromCurrentWeek = new Date(currentDate.getTime() + ((i+1)*24 * 60 * 60 * 1000));
+      var dateString = this.getDateString(futureDayFromCurrentWeek);
+
+      dates.push({date: dateString, day: this.stringifyDayOfWeek(futureDayFromCurrentWeek.getDay())});
+    }
+
+    return dates;
+  }
+
+  getDatesFromNextWeek = () => {
+    var currentDate = new Date();
+
+    var dates = [];
+
+    for (var i = 0; i < 7; i++) {
+      var futureDayFromNextWeek = new Date(currentDate.getTime() + ((6-currentDate.getDay()+1+i)*24 * 60 * 60 * 1000));
+
+      var dateString = this.getDateString(futureDayFromNextWeek);
+
+      dates.push({date: dateString, day: this.stringifyDayOfWeek(futureDayFromNextWeek.getDay())});
+    }
+
+    return dates;
+  }
+
   render () {
     return (
       <div className="calendar">
-        <WeekRow days={[{date: "19", day:"Su", displayState: "exclude"}, {date: "20", day:"M", displayState: "exclude"}, {date: "21", day:"T", displayState: "exclude"}, {date: "22", day:"W", displayState: "exclude"}, {date: "23", day:"Th", displayState: "past"}, {date: "24", day:"F", displayState: "past"}, {date: "25", day:"S", displayState: "past"}]}/>
-        <WeekRow days={[{date: "26", day:"Su", displayState: "past"}, {date: "27", day:"M", displayState: "past"}, {date: "28", day:"T", displayState: "today"}, {date: "29", day:"W"}, {date: "30", day:"Th"}, {date: "31", day:"F"}, {date: "9/1", day:"S"}]}/>
-        <WeekRow days={[{date: "2", day:"Su"}, {date: "3", day:"M"}, {date: "4", day:"T"}, {date: "5", day:"W"}, {date: "6", day:"Th"}, {date: "7", day:"F"}, {date: "7", day:"Sa"}]}/>
+        <WeekRow days={this.getRelevantDatesFromLastWeek()}/>
+        <WeekRow days={this.getDatesFromCurrentWeek()}/>
+        <WeekRow days={this.getDatesFromNextWeek()}/>
       </div>
     );
   }
