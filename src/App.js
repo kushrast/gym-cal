@@ -71,6 +71,10 @@ class DayCard extends React.Component {
 }
 
 class WeekRow extends React.Component {
+  constructor(props) {
+    super(props);
+    console.log(this.props);
+  }
   render() {
     return (
         <div className="columns is-spaced week-row">
@@ -110,6 +114,7 @@ class Calendar extends React.Component {
       for (var i = 0; i < 7; i++) {
         dates.push({displayState: "exclude"});
       }
+      return dates;
     } else {
 
       var firstDayFromPreviousWeek = new Date(currentDate.getTime() - (5*24 * 60 * 60 * 1000));
@@ -126,6 +131,7 @@ class Calendar extends React.Component {
         dayFromPreviousWeek.setDate(dayFromPreviousWeek.getDate() + 1);
       }
 
+      console.log(dates);
       return dates;
     }
   }
@@ -152,6 +158,7 @@ class Calendar extends React.Component {
       dates.push({date: dateString, day: this.stringifyDayOfWeek(futureDayFromCurrentWeek.getDay())});
     }
 
+    console.log(dates);
     return dates;
   }
 
@@ -168,6 +175,7 @@ class Calendar extends React.Component {
       dates.push({date: dateString, day: this.stringifyDayOfWeek(futureDayFromNextWeek.getDay())});
     }
 
+    console.log(dates);
     return dates;
   }
 
